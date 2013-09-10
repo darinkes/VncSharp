@@ -55,5 +55,10 @@ namespace VncSharp.Encodings
 				FillRectangle(new Rectangle(x, y, w, h), subRectVal);
 			}
 		}
+
+        public override byte[] Decode(byte[] databytes)
+        {
+            throw new NotImplementedException();
+        }
 	}
 }

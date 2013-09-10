@@ -89,6 +89,11 @@ namespace VncSharp.Encodings
 				}
 			}
 		}
+
+        public override byte[] Decode(byte[] databytes)
+        {
+            throw new NotImplementedException();
+        }
 		
 		private void ReadZrlePackedPixels(int tw, int th, int[] palette, int palSize, int[] tile)
 		{

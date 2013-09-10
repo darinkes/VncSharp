@@ -79,6 +79,8 @@ namespace VncSharp.Encodings
 		/// Obtain all necessary information from VNC Host (i.e., read) in order to Draw the rectangle, and store in colours[].
 		/// </summary>
 		public abstract void Decode();
+
+        public abstract byte[] Decode(byte[] databytes);
 		
 		/// <summary>
 		/// After calling Decode() an EncodedRectangle can be drawn to a Bitmap, which is the local representation of the remote desktop.
@@ -188,5 +190,31 @@ namespace VncSharp.Encodings
 				ptr += offset;								    // advance to next row within pixels
 			}
 		}
+
+        protected byte[] FillRectangle(Rectangle rect, byte[] dataBytes, RfbProtocol rfb)
+        {
+            int ptr = 0;
+            int offset = 0;
+
+            // If the two rectangles don't match, then rect is contained within rectangle, and
+            // ptr and offset need to be adjusted to position things at the proper starting point.
+            if (rect != rectangle)
+            {
+                ptr = rect.Y * rectangle.Width + rect.X;	// move to the start of the rectangle in pixels
+                offset = rectangle.Width - rect.Width;		// calculate the offset to get to the start of the next row
+            }
+
+            for (int y = 0; y < rect.Height; ++y)
+            {
+                for (int x = 0; x < rect.Width; ++x)
+                {
+                    framebuffer[ptr++] = preader.ReadPixel(out dataBytes, dataBytes, rfb);	// every pixel needs to be read from server
+                }
+                ptr += offset;								    // advance to next row within pixels
+            }
+
+            return dataBytes;
+        }
+
 	}
 }

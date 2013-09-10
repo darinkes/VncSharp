@@ -112,5 +112,100 @@ namespace VncSharp.Encodings
 				}
 			}
 		}
+
+        public override byte[] Decode(byte[] databytes)
+        {
+            // Subrectangle co-ordinates and info
+            int sx;
+            int sy;
+            int sw;
+            int sh;
+            int numSubrects = 0;
+            int xANDy;
+            int widthANDheight;
+
+            // Colour values to be used--black by default.
+            int backgroundPixelValue = 0;
+            int foregroundPixelValue = 0;
+
+            // NOTE: the way that this is set-up, a Rectangle can be anywhere within the bounds
+            // of the framebuffer (i.e., its x and y may not be (0,0)).  However, I ignore this
+            // since the pixels for the tiles and subrectangles are all relative to this rectangle.
+            // When the rectangle is drawn to the desktop later, its (x,y) position will become
+            // significant again.  All of this to say that in the two main loops below, ty=0 and
+            // tx=0, and all calculations are based on a (0,0) origin.
+            int bla = 0;
+            for (int ty = 0; ty < rectangle.Height; ty += 16)
+            {
+                // Tiles in the last row will often be less than 16 pixels high.
+                // All others will be 16 high.
+                int th = (rectangle.Height - ty < 16) ? rectangle.Height - ty : 16;
+
+                for (int tx = 0; tx < rectangle.Width; tx += 16)
+                {
+                    if (databytes.Length == 0)
+                        databytes = rfb.fbsreader.ReadDataBlockToBytes();
+
+                    // Tiles in the list column will often be less than 16 pixels wide.
+                    // All others will be 16 wide.
+                    int tw = (rectangle.Width - tx < 16) ? rectangle.Width - tx : 16;
+
+                    byte subencoding = databytes[0];
+                    databytes = rfb.RemoveBytes(databytes, 1);
+
+                    // See if Raw bit is set in subencoding, and if so, ignore all other bits
+                    if ((subencoding & RAW) != 0)
+                    {
+                        databytes = FillRectangle(new Rectangle(tx, ty, tw, th), databytes, rfb);
+                    }
+                    else
+                    {
+                        if ((subencoding & BACKGROUND_SPECIFIED) != 0)
+                        {
+                            backgroundPixelValue = preader.ReadPixel(out databytes, databytes, rfb);
+                        }
+
+                        // Fill-in background colour
+                        FillRectangle(new Rectangle(tx, ty, tw, th), backgroundPixelValue);
+
+                        if ((subencoding & FOREGROUND_SPECIFIED) != 0)
+                        {
+                            foregroundPixelValue = preader.ReadPixel(out databytes, databytes, rfb);
+                        }
+
+                        if ((subencoding & ANY_SUBRECTS) != 0)
+                        {
+                            // Get the number of sub-rectangles in this tile
+                            numSubrects = databytes[0];
+                            databytes = rfb.RemoveBytes(databytes, 1);
+
+                            for (int i = 0; i < numSubrects; i++)
+                            {
+                                if ((subencoding & SUBRECTS_COLOURED) != 0)
+                                {
+                                    foregroundPixelValue = preader.ReadPixel(out databytes, databytes, rfb);	// colour of this sub rectangle
+                                }
+
+                                xANDy = databytes[0];			// X-position (4 bits) and Y-Postion (4 bits) of this sub rectangle in the tile
+                                databytes = rfb.RemoveBytes(databytes, 1);
+                                widthANDheight = databytes[0];		// Width (4 bits) and Height (4 bits) of this sub rectangle
+                                databytes = rfb.RemoveBytes(databytes, 1);
+
+                                // Get the proper x, y, w, and h values out of xANDy and widthANDheight
+                                sx = (xANDy >> 4) & 0xf;
+                                sy = xANDy & 0xf;
+                                sw = ((widthANDheight >> 4) & 0xf) + 1;	// have to add 1 to get width
+                                sh = (widthANDheight & 0xf) + 1;		// same for height.
+
+                                FillRectangle(new Rectangle(tx + sx, ty + sy, sw, sh), foregroundPixelValue);
+                            }
+                        }
+                    }
+                    bla++;
+                }
+            }
+            return databytes;
+        }
+
 	}
 }

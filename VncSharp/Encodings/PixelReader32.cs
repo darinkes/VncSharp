@@ -46,5 +46,30 @@ namespace VncSharp.Encodings
 
 			return ToGdiPlusOrder(red, green, blue);			
 		}
+
+        public override int ReadPixel(out byte[] dataBytes, byte[] retBytes, RfbProtocol rfb)
+        {
+            byte b1 = retBytes[0];
+            dataBytes = rfb.RemoveBytes(retBytes, 1);
+            byte b2 = dataBytes[0];
+            dataBytes = rfb.RemoveBytes(dataBytes, 1);
+            byte b3 = dataBytes[0];
+            dataBytes = rfb.RemoveBytes(dataBytes, 1);
+            byte b4 = dataBytes[0];
+            dataBytes = rfb.RemoveBytes(dataBytes, 1);
+
+            uint pixel = (uint)(((uint)b1) & 0xFF |
+                                ((uint)b2) << 8 |
+                                ((uint)b3) << 16 |
+                                ((uint)b4) << 24);
+
+            // Extract RGB intensities from pixel
+            byte red = (byte)((pixel >> framebuffer.RedShift) & framebuffer.RedMax);
+            byte green = (byte)((pixel >> framebuffer.GreenShift) & framebuffer.GreenMax);
+            byte blue = (byte)((pixel >> framebuffer.BlueShift) & framebuffer.BlueMax);
+
+            return ToGdiPlusOrder(red, green, blue);
+        }
+
 	}
 }

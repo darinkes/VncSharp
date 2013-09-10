@@ -41,5 +41,10 @@ namespace VncSharp.Encodings
 			byte idx = reader.ReadByte();
 			return ToGdiPlusOrder((byte)rfb.MapEntries[idx, 0], (byte)rfb.MapEntries[idx, 1], (byte)rfb.MapEntries[idx, 2]);
 		}
+
+        public override int ReadPixel(out byte[] dataBytes, byte[] retBytes, RfbProtocol rfb)
+        {
+            throw new NotImplementedException();
+        }
 	}
 }

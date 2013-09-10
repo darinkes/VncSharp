@@ -45,5 +45,10 @@ namespace VncSharp.Encodings
 
 			return ToGdiPlusOrder(red, green, blue);			
 		}
+
+        public override int ReadPixel(out byte[] dataBytes, byte[] retBytes, RfbProtocol rfb)
+        {
+            throw new NotImplementedException();
+        }
 	}
 }

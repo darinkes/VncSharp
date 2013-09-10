@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Drawing;
+using System.Text;
 using System.Threading;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -61,6 +62,8 @@ namespace VncSharp
 		protected BinaryReader reader;	// Integral rather than Byte values are typically
 		protected BinaryWriter writer;	// sent and received, so these handle this.
 		protected ZRLECompressedReader zrleReader;
+
+        public FbsInputStream fbsreader;
 
 		public RfbProtocol()
 		{
@@ -116,16 +119,28 @@ namespace VncSharp
 			zrleReader = new ZRLECompressedReader(stream);
 		}
 
-		/// <summary>
+        internal void Connect(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException("stream");
+            fbsreader = new FbsInputStream(stream);
+        }
+
+	    /// <summary>
 		/// Closes the connection to the remote host.
 		/// </summary>
 		public void Close()
 		{
 			try {
-				writer.Close();
-				reader.Close();
-				stream.Close();
-				tcp.Close();
+                if (writer != null)
+				    writer.Close();
+                if (reader != null)
+				    reader.Close();
+                if (stream != null)
+				    stream.Close();
+                if (tcp != null)
+				    tcp.Close();
+                if (fbsreader != null)
+                    fbsreader.Close();
 			} catch (Exception ex) {
 				Debug.Fail(ex.Message);
 			}
@@ -137,7 +152,7 @@ namespace VncSharp
 		/// <exception cref="NotSupportedException">Thrown if the version of the host is not known or supported.</exception>
 		public void ReadProtocolVersion()
 		{
-			byte[] b = reader.ReadBytes(12);
+            var b = fbsreader != null ? fbsreader.ReadDataBlockToBytes() : reader.ReadBytes(12);
 
 			// As of the time of writing, the only supported versions are 3.3, 3.7, and 3.8.
 			if (	b[0]  == 0x52 &&					// R
@@ -213,7 +228,7 @@ namespace VncSharp
 			
 			// Protocol Version 3.7 onward supports multiple security types, while 3.3 only 1
 			if (verMinor == 3) {
-				types = new byte[] { (byte) reader.ReadUInt32() };
+                types = new byte[] { fbsreader != null ? (byte) fbsreader.MyReadInt32() : (byte)reader.ReadUInt32() };
 			} else {
 				byte num = reader.ReadByte();
 				types = new byte[num];
@@ -297,14 +312,30 @@ namespace VncSharp
 		/// <returns>Returns a Framebuffer object representing the geometry and properties of the remote host.</returns>
 		public Framebuffer ReadServerInit()
 		{
-			int w = (int) reader.ReadUInt16();
-			int h = (int) reader.ReadUInt16();
-			Framebuffer buffer = Framebuffer.FromPixelFormat(reader.ReadBytes(16), w, h);
-			int length = (int) reader.ReadUInt32();
+		    if (fbsreader != null)
+		    {
+                var bytes = fbsreader.ReadDataBlockToBytes();
 
-			buffer.DesktopName = GetString(reader.ReadBytes(length));
-			
-			return buffer;
+                var w = BitConverter.ToUInt16(new[] { bytes[1], bytes[0] }, 0);
+                var h = BitConverter.ToUInt16(new[] { bytes[3], bytes[2] }, 0);
+                var buffer = Framebuffer.FromPixelFormat(bytes, w, h, true);
+
+                bytes = fbsreader.ReadDataBlockToBytes();
+                buffer.DesktopName = Encoding.ASCII.GetString(bytes).Trim();
+
+                return buffer;
+		    }
+		    else
+		    {
+                int w = (int)reader.ReadUInt16();
+                int h = (int)reader.ReadUInt16();
+                Framebuffer buffer = Framebuffer.FromPixelFormat(reader.ReadBytes(16), w, h);
+                int length = (int)reader.ReadUInt32();
+
+                buffer.DesktopName = GetString(reader.ReadBytes(length));
+
+                return buffer;
+		    }
 		}
 		
 		/// <summary>
@@ -429,6 +460,40 @@ namespace VncSharp
 			rectangle.Height = (int) reader.ReadUInt16();
 			encoding = (int) reader.ReadUInt32();
 		}
+
+        public byte[] RemoveBytes(byte[] array, int count)
+        {
+            var newArray = new byte[array.Length - count];
+            Buffer.BlockCopy(array, count, newArray, 0, newArray.Length);
+
+            if (newArray.Length == 0)
+            {
+                newArray = fbsreader.ReadDataBlockToBytes();
+            }
+
+            return newArray;
+        }
+
+        public byte[] ReadFramebufferUpdateRectHeader(out Rectangle rectangle, out int encoding, byte[] databytes)
+        {
+            rectangle = new Rectangle();
+            rectangle.X = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = RemoveBytes(databytes, 2);
+
+            rectangle.Y = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = RemoveBytes(databytes, 2);
+
+            rectangle.Width = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = RemoveBytes(databytes, 2);
+
+            rectangle.Height = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = RemoveBytes(databytes, 2);
+
+            encoding = BitConverter.ToInt32(new[] { databytes[3], databytes[2], databytes[1], databytes[0] }, 0);
+            databytes = RemoveBytes(databytes, 4);
+
+            return databytes;
+        }
 		
         // TODO: this colour map code should probably go in Framebuffer.cs
         private ushort[,] mapEntries = new ushort[256, 3];

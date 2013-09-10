@@ -45,6 +45,17 @@ namespace VncSharp.Encodings
 			source.Y = (int) rfb.ReadUInt16();
 		}
 
+        public override byte[] Decode(byte[] databytes)
+        {
+            source = new Point();
+            source.X = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = rfb.RemoveBytes(databytes, 2);
+
+            source.Y = BitConverter.ToUInt16(new[] { databytes[1], databytes[0] }, 0);
+            databytes = rfb.RemoveBytes(databytes, 2);
+            return databytes;
+        }
+
 		public unsafe override void Draw(Bitmap desktop)
 		{
 			// Given a source area, copy this region to the point specified by destination

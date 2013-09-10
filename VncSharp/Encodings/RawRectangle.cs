@@ -38,5 +38,10 @@ namespace VncSharp.Encodings
 				framebuffer[i] = preader.ReadPixel();
 			}
 		}
+
+        public override byte[] Decode(byte[] databytes)
+        {
+            throw new NotImplementedException();
+        }
 	}
 }

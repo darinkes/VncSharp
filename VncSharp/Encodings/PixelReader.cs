@@ -37,6 +37,8 @@ namespace VncSharp.Encodings
 
 		public abstract int ReadPixel();
 
+        public abstract int ReadPixel(out byte[] dataBytes, byte[] retBytes, RfbProtocol rfb);
+
 		protected int ToGdiPlusOrder(byte red, byte green, byte blue)
 		{
 			// Put colour values into proper order for GDI+ (i.e., BGRA, where Alpha is always 0xFF)

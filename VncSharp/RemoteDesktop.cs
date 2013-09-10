@@ -17,6 +17,7 @@
 
 using System;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Reflection;
 using System.Windows.Forms;
@@ -242,15 +243,16 @@ namespace VncSharp
 		// The VncClient object handles thread marshalling onto the UI thread.
 		protected void VncUpdate(object sender, VncEventArgs e)
 		{
-			e.DesktopUpdater.Draw(desktop);
+            e.DesktopUpdater.Draw(desktop);
             Invalidate(desktopPolicy.AdjustUpdateRectangle(e.DesktopUpdater.UpdateRectangle));
 
-			if (state == RuntimeState.Connected) {
-				vnc.RequestScreenUpdate(fullScreenRefresh);
-				
-				// Make sure the next screen update is incremental
-    			fullScreenRefresh = false;
-			}
+            if (state == RuntimeState.Connected)
+            {
+                vnc.RequestScreenUpdate(fullScreenRefresh);
+
+                // Make sure the next screen update is incremental
+                fullScreenRefresh = false;
+            }
 		}
 
         /// <summary>
@@ -366,6 +368,22 @@ namespace VncSharp
             }
         }
 
+	    public void Connect(Stream stream)
+	    {
+            if (stream == null) throw new ArgumentNullException("stream");
+
+            InsureConnection(false);
+
+            vnc = new VncClient();
+            vnc.ConnectionLost += new EventHandler(VncClientConnectionLost);
+            vnc.ServerCutText += new EventHandler(VncServerCutText);
+            vnc.Connect(stream, true);
+
+            SetScalingMode(true);
+
+            Initialize(true);
+	    }
+
 		/// <summary>
 		/// Authenticate with the VNC Host using a user supplied password.
 		/// </summary>
@@ -417,16 +435,16 @@ namespace VncSharp
 		/// After protocol-level initialization and connecting is complete, the local GUI objects have to be set-up, and requests for updates to the remote host begun.
 		/// </summary>
 		/// <exception cref="System.InvalidOperationException">Thrown if the RemoteDesktop control is already in the Connected state.  See <see cref="VncSharp.RemoteDesktop.IsConnected" />.</exception>		
-		protected void Initialize()
+		protected void Initialize(bool streaming = false)
 		{
 			// Finish protocol handshake with host now that authentication is done.
 			InsureConnection(false);
-			vnc.Initialize();
+			vnc.Initialize(streaming);
 			SetState(RuntimeState.Connected);
 			
 			// Create a buffer on which updated rectangles will be drawn and draw a "please wait..." 
 			// message on the buffer for initial display until we start getting rectangles
-			SetupDesktop();
+			SetupDesktop(streaming);
 	
 			// Tell the user of this control the necessary info about the desktop in order to setup the display
 			OnConnectComplete(new ConnectEventArgs(vnc.Framebuffer.Width,
@@ -438,7 +456,7 @@ namespace VncSharp
 
 			// Start getting updates from the remote host (vnc.StartUpdates will begin a worker thread).
 			vnc.VncUpdate += new VncUpdateHandler(VncUpdate);
-			vnc.StartUpdates();
+			vnc.StartUpdates(streaming);
 		}
 
 		private void SetState(RuntimeState newState)
@@ -463,7 +481,7 @@ namespace VncSharp
 		/// Creates and initially sets-up the local bitmap that will represent the remote desktop image.
 		/// </summary>
 		/// <exception cref="System.InvalidOperationException">Thrown if the RemoteDesktop control is not already in the Connected state. See <see cref="VncSharp.RemoteDesktop.IsConnected" />.</exception>
-		protected void SetupDesktop()
+		protected void SetupDesktop(bool streaming = false)
 		{
 			InsureConnection(true);
 
@@ -474,7 +492,7 @@ namespace VncSharp
 			
 			// Draw a "please wait..." message on the local desktop until the first
 			// rectangle(s) arrive and overwrite with the desktop image.
-			DrawDesktopMessage("Connecting to VNC host, please wait...");
+		    DrawDesktopMessage(streaming ? "Starting to read file stream..." : "Connecting to VNC host, please wait...");
 		}
 	
 		/// <summary>
