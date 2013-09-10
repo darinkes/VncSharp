@@ -134,7 +134,6 @@ namespace VncSharp.Encodings
             // When the rectangle is drawn to the desktop later, its (x,y) position will become
             // significant again.  All of this to say that in the two main loops below, ty=0 and
             // tx=0, and all calculations are based on a (0,0) origin.
-            int bla = 0;
             for (int ty = 0; ty < rectangle.Height; ty += 16)
             {
                 // Tiles in the last row will often be less than 16 pixels high.
@@ -201,7 +200,6 @@ namespace VncSharp.Encodings
                             }
                         }
                     }
-                    bla++;
                 }
             }
             return databytes;
