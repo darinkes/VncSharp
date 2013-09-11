@@ -706,5 +706,17 @@ namespace VncSharp
 				OnConnectionLost();
 			}
 		}
-	}
+
+	    public void Pause()
+	    {
+            if (rfb.fbsreader != null)
+	            rfb.fbsreader.Pause();
+	    }
+
+	    public void Play()
+	    {
+            if (rfb.fbsreader != null)
+                rfb.fbsreader.Play();
+	    }
+    }
 }

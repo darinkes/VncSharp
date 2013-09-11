@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -12,6 +13,7 @@ namespace VncSharp
         protected int NextBlockOffset;
         public int TimeOffset { get; set; }
         protected long StartTime;
+        protected bool Ispaused;
 
         public string MinorVersion { get; set; }
         public string MajorVersion { get; set; }
@@ -37,6 +39,7 @@ namespace VncSharp
             StartTime = CurrentMillis() + TimeOffset;
             BufferSize = 0;
             NextBlockOffset = 0;
+            Ispaused = false;
         }
 
         private void ReadVersion()
@@ -66,6 +69,8 @@ namespace VncSharp
 
         public byte[] ReadDataBlockToBytes()
         {
+            while (Ispaused) {}
+
             long readResult = ReadUnsigned32();
             if (readResult < 0)
                 return null;
@@ -140,6 +145,16 @@ namespace VncSharp
             }
 
             return true;
+        }
+
+        internal void Pause()
+        {
+            Ispaused = true;
+        }
+
+        internal void Play()
+        {
+            Ispaused = false;
         }
     }
 }

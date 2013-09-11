@@ -16,7 +16,7 @@ namespace VncSharp
 {
     [ToolboxBitmap(typeof(RemoteDesktopWpf), "Resources.vncviewer.ico")]
 
-    public partial class RemoteDesktopWpf : UserControl
+    public partial class RemoteDesktopWpf : UserControl, INotifyPropertyChanged
     {
         [Description("Raised after a successful call to the Connect() method.")]
         public event ConnectCompleteHandler ConnectComplete;
@@ -189,9 +189,17 @@ namespace VncSharp
             }
         }
 
+        private int framecount = 0;
+
         protected void VncUpdate(object sender, VncEventArgs e)
         {
-            Dispatcher.Invoke(new Action(() => e.DesktopUpdater.Draw(_desktop)));
+
+            Dispatcher.Invoke(new Action(() =>
+            {
+                e.DesktopUpdater.Draw(_desktop);
+                framecount++;
+                FrameCount.Text = "Frame-Count: " + framecount;
+            }));
 
             if (_state == RuntimeState.Connected)
             {
@@ -233,6 +241,8 @@ namespace VncSharp
 
         public void Connect(string host, int display, bool viewOnly, bool scaled)
         {
+            IsStreaming = false;
+
             // TODO: Should this be done asynchronously so as not to block the UI?  Since an event 
             // indicates the end of the connection, maybe that would be a better design.
             InsureConnection(false);
@@ -268,9 +278,19 @@ namespace VncSharp
             }
         }
 
+        private bool _isStreaming;
+
+        public bool IsStreaming
+        {
+            get { return _isStreaming; }
+            set { _isStreaming = value; RaisePropertyChanged("IsStreaming"); }
+        }
+
         public void Connect(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException("stream");
+
+            IsStreaming = true;
 
             InsureConnection(false);
 
@@ -807,6 +827,32 @@ namespace VncSharp
                 {
                     _vnc.WriteKeyboardEvent(keys[i], false);
                 }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private bool _paused;
+
+        private void PausePlayButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_paused)
+            {
+                _paused = false;
+                PausePlayButton.Content = "Pause";
+                _vnc.Play();
+            }
+            else
+            {
+                _paused = true;
+                PausePlayButton.Content = "Play";
+                _vnc.Pause();
             }
         }
     }

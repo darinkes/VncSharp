@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using VncSharp;
 
@@ -19,9 +20,9 @@ namespace VncSharpTestWpf
             {
                 remoteDesktop.ConnectComplete += RemoteDesktop1OnConnectComplete;
                 remoteDesktop.ConnectionLost += RemoteDesktop1OnConnectionLost;
-                //var stream = new FileStream("example2.fbs", FileMode.Open);
-                //remoteDesktop.Connect(stream);
-                remoteDesktop.Connect(vncHost);
+                var stream = new FileStream("example2.fbs", FileMode.Open);
+                remoteDesktop.Connect(stream);
+                //remoteDesktop.Connect(vncHost, false, true);
             }
             catch (VncProtocolException vex)
             {
@@ -52,8 +53,8 @@ namespace VncSharpTestWpf
 
         private void RemoteDesktop1OnConnectComplete(object sender, ConnectEventArgs connectEventArgs)
         {
-            remoteDesktop.Width = connectEventArgs.DesktopWidth;
-            remoteDesktop.Height = connectEventArgs.DesktopHeight;
+            //remoteDesktop.Width = connectEventArgs.DesktopWidth;
+            //remoteDesktop.Height = connectEventArgs.DesktopHeight;
             mainWindow.Title = connectEventArgs.DesktopName;
         }
     }
