@@ -65,6 +65,8 @@ namespace VncSharp
 
         public FbsInputStream fbsreader;
 
+        private readonly object lockObj = new object();
+
 		public RfbProtocol()
 		{
 		}
@@ -213,8 +215,11 @@ namespace VncSharp
 			Debug.Assert(verMinor == 3 || verMinor == 7 || verMinor == 8, "Wrong Protocol Version!",
 						 string.Format("Protocol Version should be 3.3, 3.7, or 3.8 but is {0}.{1}", verMajor.ToString(), verMinor.ToString()));
 
-			writer.Write(GetBytes(string.Format("RFB 003.00{0}\n", verMinor.ToString())));
-			writer.Flush();
+		    lock (lockObj)
+		    {
+		        writer.Write(GetBytes(string.Format("RFB 003.00{0}\n", verMinor.ToString())));
+		        writer.Flush();
+		    }
 		}
 
 		/// <summary>
@@ -259,9 +264,13 @@ namespace VncSharp
 			Debug.Assert(type >= 1, "Wrong Security Type", "The Security Type must be one that requires authentication.");
 			
 			// Only bother writing this byte if the version of the server is 3.7
-			if (verMinor >= 7) {
-				writer.Write(type);
-				writer.Flush();			
+			if (verMinor >= 7)
+            {
+                lock (lockObj)
+                {
+                    writer.Write(type);
+                    writer.Flush();
+                }
 			}
 		}
 
@@ -281,8 +290,11 @@ namespace VncSharp
 		/// <param name="response">The DES password encrypted challege sent by the server.</param>
 		public void WriteSecurityResponse(byte[] response)
 		{
-			writer.Write(response, 0, response.Length);
-			writer.Flush();
+		    lock (lockObj)
+		    {
+		        writer.Write(response, 0, response.Length);
+		        writer.Flush();
+		    }
 		}
 
 		/// <summary>
@@ -301,9 +313,12 @@ namespace VncSharp
 		/// <param name="shared">True if the server should allow other clients to connect, otherwise False.</param>
 		public void WriteClientInitialisation(bool shared)
 		{
-			// Non-zero if TRUE, zero if FALSE
-			writer.Write((byte)(shared ? 1 : 0));
-			writer.Flush();
+		    lock (lockObj)
+		    {
+		        // Non-zero if TRUE, zero if FALSE
+		        writer.Write((byte) (shared ? 1 : 0));
+		        writer.Flush();
+		    }
 		}
 		
 		/// <summary>
@@ -344,10 +359,13 @@ namespace VncSharp
 		/// <param name="buffer">A Framebuffer telling the server how to encode pixel data. Typically this will be the same one sent by the server during initialization.</param>
 		public void WriteSetPixelFormat(Framebuffer buffer)
 		{
-			writer.Write(SET_PIXEL_FORMAT);
-			WritePadding(3);
-			writer.Write(buffer.ToPixelFormat());		// 16-byte Pixel Format
-			writer.Flush();
+		    lock (lockObj)
+		    {
+                writer.Write(SET_PIXEL_FORMAT);
+                WritePadding(3);
+                writer.Write(buffer.ToPixelFormat());		// 16-byte Pixel Format
+                writer.Flush();		        
+		    }
 		}
 
 		/// <summary>
@@ -356,15 +374,19 @@ namespace VncSharp
 		/// <param name="encodings">An array of integers indicating the encoding types supported.  The order indicates preference, where the first item is the first preferred.</param>
 		public void WriteSetEncodings(uint[] encodings)
 		{
-			writer.Write(SET_ENCODINGS);
-			WritePadding(1);
-			writer.Write((ushort)encodings.Length);
-			
-			for (int i = 0; i < encodings.Length; i++) {
-				writer.Write(encodings[i]);
-			}
+		    lock (lockObj)
+		    {
+                writer.Write(SET_ENCODINGS);
+                WritePadding(1);
+                writer.Write((ushort)encodings.Length);
 
-			writer.Flush();
+                for (int i = 0; i < encodings.Length; i++)
+                {
+                    writer.Write(encodings[i]);
+                }
+
+                writer.Flush();	        
+		    }
 		}
 
 		/// <summary>
@@ -377,13 +399,16 @@ namespace VncSharp
 		/// <param name="incremental">Indicates whether only changes to the client's data should be sent or the entire desktop.</param>
 		public void WriteFramebufferUpdateRequest(ushort x, ushort y, ushort width, ushort height, bool incremental)
 		{
-			writer.Write(FRAMEBUFFER_UPDATE_REQUEST);
-			writer.Write((byte)(incremental ? 1 : 0));
-			writer.Write(x);
-			writer.Write(y);
-			writer.Write(width);
-			writer.Write(height);
-			writer.Flush();
+		    lock (lockObj)
+		    {
+                writer.Write(FRAMEBUFFER_UPDATE_REQUEST);
+                writer.Write((byte)(incremental ? 1 : 0));
+                writer.Write(x);
+                writer.Write(y);
+                writer.Write(width);
+                writer.Write(height);
+                writer.Flush();		        
+		    }
 		}
 
 		/// <summary>
@@ -393,11 +418,14 @@ namespace VncSharp
 		/// <param name="pressed"></param>
 		public void WriteKeyEvent(uint keysym, bool pressed)
 		{
-			writer.Write(KEY_EVENT);
-			writer.Write( (byte) (pressed ? 1 : 0));
-			WritePadding(2);
-			writer.Write(keysym);
-			writer.Flush();
+		    lock (lockObj)
+		    {
+                writer.Write(KEY_EVENT);
+                writer.Write((byte)(pressed ? 1 : 0));
+                WritePadding(2);
+                writer.Write(keysym);
+                writer.Flush();        
+		    }
 		}
 
 		/// <summary>
@@ -407,11 +435,14 @@ namespace VncSharp
 		/// <param name="point">The location of the mouse cursor.</param>
 		public void WritePointerEvent(byte buttonMask, Point point)
 		{
-			writer.Write(POINTER_EVENT);
-			writer.Write(buttonMask);
-			writer.Write( (ushort) point.X);
-			writer.Write( (ushort) point.Y);
-			writer.Flush();
+		    lock (lockObj)
+		    {
+                writer.Write(POINTER_EVENT);
+                writer.Write(buttonMask);
+                writer.Write((ushort)point.X);
+                writer.Write((ushort)point.Y);
+                writer.Flush();	        
+		    }
 		}
 
 		/// <summary>
@@ -420,11 +451,14 @@ namespace VncSharp
 		/// <param name="text">The text to be sent to the server.</param></param>
 		public void WriteClientCutText(string text)
 		{
-			writer.Write(CLIENT_CUT_TEXT);
-			WritePadding(3);
-			writer.Write( (uint) text.Length);
-			writer.Write(GetBytes(text));
-			writer.Flush();
+		    lock (lockObj)
+		    {
+                writer.Write(CLIENT_CUT_TEXT);
+                WritePadding(3);
+                writer.Write((uint)text.Length);
+                writer.Write(GetBytes(text));
+                writer.Flush();		        
+		    }
 		}
 
 		/// <summary>
@@ -578,7 +612,10 @@ namespace VncSharp
 		/// <param name="value">The UInt32 value to be written.</param>
 		public void WriteUint32(uint value)
 		{
-			writer.Write(value);
+		    lock (lockObj)
+		    {
+                writer.Write(value);
+		    }
 		}
 
 		/// <summary>
@@ -587,8 +624,11 @@ namespace VncSharp
 		/// <param name="value">The UInt16 value to be written.</param>
 		public void WriteUInt16(ushort value)
 		{
-			writer.Write(value);
-		}
+            lock (lockObj)
+            {
+                writer.Write(value);
+            }
+        }
 		
 		/// <summary>
 		/// Writes a single Byte value to the server.
@@ -596,8 +636,11 @@ namespace VncSharp
 		/// <param name="value">The UInt32 value to be written.</param>
 		public void WriteByte(byte value)
 		{
-			writer.Write(value);
-		}
+            lock (lockObj)
+            {
+                writer.Write(value);
+            }
+        }
 
 		/// <summary>
 		/// Reads the specified number of bytes of padding (i.e., garbage bytes) from the server.
