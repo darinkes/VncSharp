@@ -286,7 +286,7 @@ namespace VncSharp
             set { _isStreaming = value; RaisePropertyChanged("IsStreaming"); }
         }
 
-        public void Connect(Stream stream)
+        public void Connect(Stream stream, bool scaled)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
@@ -301,11 +301,16 @@ namespace VncSharp
 
             _desktopPolicy = new VncWpfDesktopPolicy(_vnc, this);
 
-            SetScalingMode(true);
+            SetScalingMode(scaled);
 
             waitLabel.Content = "Reading Stream from file , please wait... ";
 
             Initialize(true);
+        }
+
+        public void Connect(Stream stream)
+        {
+            Connect(stream, true);
         }
 
         //public void Listen(string host, int port = 5500, bool viewOnly = false, bool scaled = false)
