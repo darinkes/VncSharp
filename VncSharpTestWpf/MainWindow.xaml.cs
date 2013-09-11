@@ -33,7 +33,7 @@ namespace VncSharpTestWpf
             try
             {
                 //remoteDesktop.Connect(stream);
-                remoteDesktop.Connect(vncHost);
+                remoteDesktop.Connect(vncHost, false, false);
             }
             catch (VncProtocolException vex)
             {

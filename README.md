@@ -20,3 +20,9 @@ VncSharp is licensed for use in open source applications. If you have an idea fo
 
   [VNC]: http://www.realvnc.com/
   [can download]: http://www.realvnc.com/download.html
+
+Improvements by Stefan Rinkes
+-----------------
+
+- Add WPF UserControl
+- Add ability to play recorded VNC-Sessions (e.g. by rfbproxy)
