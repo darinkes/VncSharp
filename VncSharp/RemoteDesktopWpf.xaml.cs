@@ -189,8 +189,6 @@ namespace VncSharp
             }
         }
 
-        private int updates;
-
         protected void VncUpdate(object sender, VncEventArgs e)
         {
             Dispatcher.Invoke(new Action(() => e.DesktopUpdater.Draw(_desktop)));
@@ -202,12 +200,7 @@ namespace VncSharp
                 // Make sure the next screen update is incremental
                 _fullScreenRefresh = false;
             }
-            updates++;
-            if (updates%24 == 0)
-            {
-                updates = 0;
-                _vnc.RequestScreenUpdate(true);
-            }
+
         }
 
         public void Connect(string host)
