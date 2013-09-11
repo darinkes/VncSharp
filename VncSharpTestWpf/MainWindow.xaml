@@ -4,6 +4,6 @@
         xmlns:vnc="clr-namespace:VncSharp;assembly=VncSharp"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <vnc:RemoteDesktopWpf/>
+        <vnc:RemoteDesktopWpf x:Name="remoteDesktop"/>
     </Grid>
 </Window>

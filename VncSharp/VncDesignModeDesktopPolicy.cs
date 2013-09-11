@@ -31,6 +31,11 @@ namespace VncSharp
         {
         }
 
+        public VncDesignModeDesktopPolicy(RemoteDesktopWpf remoteDesktopWpf)
+            : base(null, remoteDesktopWpf)
+        {
+        }
+
         public override bool AutoScroll {
             get {
                 return true;

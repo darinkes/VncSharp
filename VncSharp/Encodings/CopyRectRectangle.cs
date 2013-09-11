@@ -18,6 +18,9 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using Point = System.Drawing.Point;
 
 namespace VncSharp.Encodings
 {
@@ -115,5 +118,27 @@ namespace VncSharp.Encodings
 				bmpd = null;
 			}
 		}
+
+        public unsafe override void Draw(WriteableBitmap desktop)
+        {
+            // Avoid exception if window is dragged bottom of screen
+            if (rectangle.Top + rectangle.Height >= framebuffer.Height)
+            {
+                rectangle.Height = framebuffer.Height - rectangle.Top - 1;
+            }
+
+            if ((rectangle.Y * desktop.PixelWidth + rectangle.X) < (source.Y * desktop.PixelWidth + source.X))
+            {
+                Int32Rect srcRect = new Int32Rect(source.X, source.Y, rectangle.Width, rectangle.Height);
+                desktop.WritePixels(srcRect, desktop.BackBuffer, desktop.BackBufferStride * desktop.PixelHeight, desktop.PixelWidth * 4, rectangle.X, rectangle.Y);
+            }
+            else
+            {
+                Int32[] pixelBuf = new Int32[rectangle.Width * rectangle.Height];
+
+                desktop.CopyPixels(new Int32Rect(source.X, source.Y, rectangle.Width, rectangle.Height), pixelBuf, rectangle.Width * 4, 0);
+                desktop.WritePixels(new Int32Rect(0, 0, rectangle.Width, rectangle.Height), pixelBuf, rectangle.Width * 4, rectangle.X, rectangle.Y);
+            }
+        }
 	}
 }

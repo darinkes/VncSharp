@@ -17,6 +17,7 @@
 
 using System;
 using System.Drawing;
+using System.Windows.Media.Imaging;
 
 namespace VncSharp
 {
@@ -30,6 +31,8 @@ namespace VncSharp
 		/// </summary>
 		/// <param name="desktop">The desktop Bitmap on which updates should be drawn.</param>
 		void Draw(Bitmap desktop);
+
+        void Draw(WriteableBitmap desktop);
 		
 		/// <summary>
 		/// The region of the desktop Bitmap that needs to be re-drawn.

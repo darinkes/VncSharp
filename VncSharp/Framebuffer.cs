@@ -72,6 +72,11 @@ namespace VncSharp
 			}
 		}
 
+        public int[] GetPixelArray()
+        {
+            return pixels;
+        }
+
 		/// <summary>
 		/// The Width of the Framebuffer, measured in Pixels.
 		/// </summary>

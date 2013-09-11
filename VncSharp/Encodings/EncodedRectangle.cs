@@ -20,6 +20,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using Point = System.Drawing.Point;
 
 namespace VncSharp.Encodings
 {
@@ -120,6 +123,15 @@ namespace VncSharp.Encodings
 				bmpd = null;
 			}		
 		}
+
+        public virtual void Draw(WriteableBitmap desktop)
+        {
+            desktop.WritePixels(new Int32Rect(0, 0, rectangle.Width, rectangle.Height),
+                                framebuffer.GetPixelArray(),
+                                rectangle.Width * 4,
+                                rectangle.X,
+                                rectangle.Y);
+        }
 
 		/// <summary>
 		/// Fills the given Rectangle with a solid colour (i.e., all pixels will have the same value--colour).

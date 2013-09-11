@@ -70,6 +70,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FbsInputStream.cs" />
+    <Compile Include="PasswordDialogWpf.xaml.cs">
+      <DependentUpon>PasswordDialogWpf.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RemoteDesktopWpf.xaml.cs">
       <DependentUpon>RemoteDesktopWpf.xaml</DependentUpon>
     </Compile>
@@ -107,6 +110,7 @@
     <Compile Include="VncEventArgs.cs" />
     <Compile Include="VncProtocolException.cs" />
     <Compile Include="VncViewInputPolicy.cs" />
+    <Compile Include="VncWpfDesktopPolicy.cs" />
     <Compile Include="zlib.NET\Adler32.cs" />
     <Compile Include="zlib.NET\Deflate.cs" />
     <Compile Include="zlib.NET\InfBlocks.cs" />
@@ -137,6 +141,7 @@
     <EmbeddedResource Include="Resources\vncviewer.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\vnccursorwpf.cur" />
     <Content Include="vncviewer.ico" />
     <Content Include="zlib.NET\history.txt" />
     <Content Include="zlib.NET\license.txt" />
@@ -158,6 +163,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PasswordDialogWpf.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="RemoteDesktopWpf.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

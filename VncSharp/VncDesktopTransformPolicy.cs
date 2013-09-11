@@ -28,12 +28,20 @@ namespace VncSharp
 	{
         protected VncClient vnc;
         protected RemoteDesktop remoteDesktop;
+	    protected RemoteDesktopWpf remoteDesktopWpf;
 
         public VncDesktopTransformPolicy(VncClient vnc,
                                          RemoteDesktop remoteDesktop)
         {
             this.vnc = vnc;
             this.remoteDesktop = remoteDesktop;
+        }
+
+        public VncDesktopTransformPolicy(VncClient vnc,
+                                 RemoteDesktopWpf remopteDesktopWpf)
+        {
+            this.vnc = vnc;
+            this.remoteDesktopWpf = remopteDesktopWpf;
         }
 
         public virtual bool AutoScroll
