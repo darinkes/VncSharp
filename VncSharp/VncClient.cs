@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Windows.Forms;
-
 using VncSharp.Encodings;
 
 namespace VncSharp

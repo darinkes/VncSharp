@@ -189,6 +189,8 @@ namespace VncSharp
             }
         }
 
+        private int updates;
+
         protected void VncUpdate(object sender, VncEventArgs e)
         {
             Dispatcher.Invoke(new Action(() => e.DesktopUpdater.Draw(_desktop)));
@@ -199,6 +201,12 @@ namespace VncSharp
 
                 // Make sure the next screen update is incremental
                 _fullScreenRefresh = false;
+            }
+            updates++;
+            if (updates%24 == 0)
+            {
+                updates = 0;
+                _vnc.RequestScreenUpdate(true);
             }
         }
 
@@ -620,9 +628,9 @@ namespace VncSharp
         private void KeyDownEventHandler(object sender, KeyEventArgs e)
         {
             if (DesignMode || !IsConnected)
-            {
                 return;
-            }
+
+            ManageKeyDownAndKeyUp(e, true);
 
             char ascii = ConvertKeyToAscii(e.Key);
 
@@ -639,10 +647,6 @@ namespace VncSharp
                 _vnc.WriteKeyboardEvent(keyChar, true);
                 _vnc.WriteKeyboardEvent(keyChar, false);
             }
-            else
-            {
-                ManageKeyDownAndKeyUp(e, true);
-            }
 
             e.Handled = true;
         }
@@ -650,9 +654,7 @@ namespace VncSharp
         private void KeyUpEventHandler(object sender, KeyEventArgs e)
         {
             if (DesignMode || !IsConnected)
-            {
                 return;
-            }
 
             ManageKeyDownAndKeyUp(e, false);
 

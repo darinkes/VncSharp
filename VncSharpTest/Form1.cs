@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
 using VncSharp;
 
@@ -10,10 +9,12 @@ namespace VncSharpTest
         public Form1()
         {
             InitializeComponent();
-            var stream = new FileStream("example2.fbs", FileMode.Open);
             remoteDesktop1.ConnectComplete += RemoteDesktop1OnConnectComplete;
             remoteDesktop1.ConnectionLost += RemoteDesktop1OnConnectionLost;
-            remoteDesktop1.Connect(stream);
+
+            //var stream = new FileStream("example2.fbs", FileMode.Open);
+            //remoteDesktop1.Connect(stream);
+            remoteDesktop1.Connect("172.16.4.104");
         }
 
         private void RemoteDesktop1OnConnectionLost(object sender, EventArgs eventArgs)
