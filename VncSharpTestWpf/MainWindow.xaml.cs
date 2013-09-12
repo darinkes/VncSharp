@@ -10,7 +10,7 @@ namespace VncSharpTestWpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const string vncHost = "172.16.4.104";
+        private const string vncHost = "127.0.0.1";
 
         public MainWindow()
         {
@@ -20,8 +20,9 @@ namespace VncSharpTestWpf
             {
                 remoteDesktop.ConnectComplete += RemoteDesktop1OnConnectComplete;
                 remoteDesktop.ConnectionLost += RemoteDesktop1OnConnectionLost;
-                var stream = new FileStream("example2.fbs", FileMode.Open);
+                //var stream = new FileStream("b.fbs", FileMode.Open);
                 //remoteDesktop.Connect(stream);
+                remoteDesktop.VncPort = 63913;
                 remoteDesktop.Connect(vncHost, 0, false, true, "Tor!Tor!");
             }
             catch (VncProtocolException vex)
@@ -44,11 +45,11 @@ namespace VncSharpTestWpf
 
         private void RemoteDesktop1OnConnectionLost(object sender, EventArgs eventArgs)
         {
-            MessageBox.Show(this,
+            Dispatcher.Invoke(new Action(() => MessageBox.Show(this,
                 string.Format("Lost Connection to host."),
                 string.Format("Lost Connection to {0}", vncHost),
                 MessageBoxButton.OK,
-                MessageBoxImage.Exclamation);
+                MessageBoxImage.Exclamation)));
         }
 
         private void RemoteDesktop1OnConnectComplete(object sender, ConnectEventArgs connectEventArgs)

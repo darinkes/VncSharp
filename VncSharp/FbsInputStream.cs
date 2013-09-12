@@ -98,7 +98,7 @@ namespace VncSharp
                     Thread.Sleep(WaitingTime);
             }
 
-            if (BufferSize < 0 || TimeOffset < 0)
+            if (BufferSize < 0 || TimeOffset < 0 || 0 >= BufferSize)
             {
                 Buffer = null;
                 BufferSize = 0;

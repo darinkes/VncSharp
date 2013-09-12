@@ -546,6 +546,10 @@ namespace VncSharp
 
         protected void VncClientConnectionLost(object sender, EventArgs e)
         {
+            Debug.WriteLine("VncClientConnectionLost");
+            if (Stopwatch != null && Stopwatch.IsRunning)
+                Stopwatch.Stop();
+
             // If the remote host dies, and there are attempts to write
             // keyboard/mouse/update notifications, this may get called 
             // many times, and from main or worker thread.
@@ -559,8 +563,6 @@ namespace VncSharp
             //{
             //    StopListen();
             //}
-            if (Stopwatch != null && Stopwatch.IsRunning)
-                Stopwatch.Stop();
         }
 
         protected void VncServerCutText(object sender, EventArgs e)
@@ -873,12 +875,14 @@ namespace VncSharp
                 _paused = false;
                 PausePlayButton.Content = "Pause";
                 _vnc.Play();
+                Stopwatch.Start();
             }
             else
             {
                 _paused = true;
                 PausePlayButton.Content = "Play";
                 _vnc.Pause();
+                Stopwatch.Stop();
             }
         }
     }

@@ -598,6 +598,7 @@ namespace VncSharp
                 {
                     Debug.WriteLine(ex);
                     OnConnectionLost();
+                    return;
                 }
             }
         }
@@ -605,17 +606,22 @@ namespace VncSharp
 
 		protected void OnConnectionLost()
 		{
-			// In order to play nicely with WinForms controls, we do a check here to 
-			// see if it is necessary to synchronize this event with the UI thread.
-			if (ConnectionLost != null && 
-				ConnectionLost.Target is System.Windows.Forms.Control) {
-				Control target = ConnectionLost.Target as Control;
+            //// In order to play nicely with WinForms controls, we do a check here to 
+            //// see if it is necessary to synchronize this event with the UI thread.
+            if (ConnectionLost != null &&
+                ConnectionLost.Target is System.Windows.Forms.Control)
+            {
+                Control target = ConnectionLost.Target as Control;
 
-				if (target != null)
-					target.Invoke(ConnectionLost, new object[] {this, EventArgs.Empty});
-				else
-					ConnectionLost(this, EventArgs.Empty);
-			}
+                if (target != null)
+                    target.Invoke(ConnectionLost, new object[] { this, EventArgs.Empty });
+                else
+                    ConnectionLost(this, EventArgs.Empty);
+            }
+            else if (ConnectionLost != null)
+            {
+                ConnectionLost(this, EventArgs.Empty);
+            }
 		}
 
 	    protected void OnServerCutText()
