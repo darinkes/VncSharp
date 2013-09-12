@@ -31,6 +31,7 @@
                             Visibility="{Binding IsStreaming,ElementName=remoteDesktopWpf,Converter={StaticResource BooleanToVisibilityConverter}}"> 
                     <Button HorizontalAlignment="Center" VerticalAlignment="Center" Name="PausePlayButton" Click="PausePlayButton_OnClick" MinWidth="50" MinHeight="30" Content="Pause" Margin="5" Padding="5"/>
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Name="FrameCount" Text="Frame-Count: 0" Padding="5" Margin="5"/>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Name="RunTime" Text="{Binding Path=Stopwatch.Elapsed,ElementName=remoteDesktopWpf}" Padding="5" Margin="5"></TextBlock>
                 </StackPanel>
 
             </Grid>

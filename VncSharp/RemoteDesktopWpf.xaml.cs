@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Windows.Controls;
 
 using System.Windows.Media.Imaging;
@@ -199,6 +201,8 @@ namespace VncSharp
                 e.DesktopUpdater.Draw(_desktop);
                 framecount++;
                 FrameCount.Text = "Frame-Count: " + framecount;
+                if (Stopwatch != null && !Stopwatch.IsRunning)
+                    Stopwatch.Start();
             }));
 
             if (_state == RuntimeState.Connected)
@@ -287,11 +291,17 @@ namespace VncSharp
             set { _isStreaming = value; RaisePropertyChanged("IsStreaming"); }
         }
 
+        public Stopwatch Stopwatch { get; set; }
+        private Timer _timer;
+
         public void Connect(Stream stream, bool scaled)
         {
             if (stream == null) throw new ArgumentNullException("stream");
 
             IsStreaming = true;
+
+            Stopwatch = new Stopwatch();
+            _timer = new Timer(s => FirePropertyChanged(this, new PropertyChangedEventArgs("Stopwatch")), null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100));
 
             InsureConnection(false);
 
@@ -307,6 +317,14 @@ namespace VncSharp
             waitLabel.Content = "Reading Stream from file , please wait... ";
 
             Initialize(true);
+        }
+
+        private void FirePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(sender, e);
+            }
         }
 
         public void Connect(Stream stream)
@@ -541,6 +559,8 @@ namespace VncSharp
             //{
             //    StopListen();
             //}
+            if (Stopwatch != null && Stopwatch.IsRunning)
+                Stopwatch.Stop();
         }
 
         protected void VncServerCutText(object sender, EventArgs e)
