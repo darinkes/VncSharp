@@ -26,3 +26,8 @@ Improvements by Stefan Rinkes
 
 - Add WPF UserControl
 - Add ability to play recorded VNC-Sessions (e.g. by rfbproxy)
+
+ToDo:
+
+- Import Improvements from: https://github.com/rmcardle/VncSharpNG
+- Finish Decode(databytes) for all Encodings
