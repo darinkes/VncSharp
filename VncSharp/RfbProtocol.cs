@@ -820,25 +820,75 @@ namespace VncSharp
 
 			public void DecodeStream()
 			{
-				// Reset position to use same buffer
-				zlibMemoryStream.Position = 0;
+                // Reset position to use same buffer
+                zlibMemoryStream.Position = 0;
 
-				// Get compressed stream length to read
-				byte[] buff = new byte[4];
-				if (this.BaseStream.Read(buff, 0, 4) != 4)
-					throw new Exception("ZRLE decoder: Invalid compressed stream size");
+                // Get compressed stream length to read
+                var buff = new byte[4];
+                if (BaseStream.Read(buff, 0, 4) != 4)
+                    throw new Exception("ZRLE decoder: Invalid compressed stream size");
 
-				// BigEndian to LittleEndian conversion
-				int compressedBufferSize = (int)(buff[3] | buff[2] << 8 | buff[1] << 16 | buff[0] << 24);
-				if (compressedBufferSize > 64 * 1024 * 1024)
-					throw new Exception("ZRLE decoder: Invalid compressed data size");
+                // BigEndian to LittleEndian conversion
+                int compressedBufferSize = buff[3] | buff[2] << 8 | buff[1] << 16 | buff[0] << 24;
+                if (compressedBufferSize > 64 * 1024 * 1024)
+                    throw new Exception("ZRLE decoder: Invalid compressed data size");
 
-				// Decode stream
-				int pos = 0;
-				while (pos++ < compressedBufferSize)
-					zlibDecompressedStream.WriteByte(this.BaseStream.ReadByte());
+                //// Decode stream
+                //int pos = 0;
+                //while (pos++ < compressedBufferSize)
+                //{
+                //    try
+                //    {
+                //        zlibDecompressedStream.WriteByte(this.BaseStream.ReadByte());
+                //    }
+                //    catch (Exception exception)
+                //    {
+                //        Debug.WriteLine(exception);
+                //        throw;
+                //    }
+                //}
 
-				zlibMemoryStream.Position = 0;
+                #region Decode stream in blocks
+                // Decode stream in blocks
+                var bytesNeeded = compressedBufferSize;
+                const int maxBufferSize = 64 * 1024; // 64k buffer
+                var receiveBuffer = new byte[maxBufferSize];
+                var netStream = (NetworkStream)BaseStream;
+
+                while (bytesNeeded > 0)
+                {
+                    if (netStream.DataAvailable)
+                    {
+                        var bytesToRead = bytesNeeded;
+
+                        // the byteToRead should never exceed the maxBufferSize
+                        if (bytesToRead > maxBufferSize)
+                            bytesToRead = maxBufferSize;
+
+                        // try reading bytes
+                        int bytesRead = BaseStream.Read(receiveBuffer, 0, bytesToRead);
+                        // lower the bytesNeeded with the bytesRead.
+                        bytesNeeded -= bytesRead;
+
+                        // write the readed bytes to the decompression stream.
+                        try
+                        {
+                            zlibDecompressedStream.Write(receiveBuffer, 0, bytesRead);
+                            receiveBuffer = new byte[maxBufferSize];
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
+                    }
+                    else
+                        // there isn't any data atm. let's give the processor some time.
+                        Thread.Sleep(1);
+
+                }
+                #endregion
+
+                zlibMemoryStream.Position = 0;
 			}
 		}
 	}
