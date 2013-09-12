@@ -226,7 +226,7 @@ namespace VncSharp
         public void Connect(string host, bool viewOnly, bool scaled)
         {
             // Use Display 0 by default.
-            Connect(host, 0, viewOnly, scaled);
+            Connect(host, 0, viewOnly, scaled, null);
         }
 
         public void Connect(string host, int display)
@@ -236,10 +236,10 @@ namespace VncSharp
 
         public void Connect(string host, int display, bool viewOnly)
         {
-            Connect(host, display, viewOnly, false);
+            Connect(host, display, viewOnly, false, null);
         }
 
-        public void Connect(string host, int display, bool viewOnly, bool scaled)
+        public void Connect(string host, int display, bool viewOnly, bool scaled, string password)
         {
             IsStreaming = false;
 
@@ -263,7 +263,8 @@ namespace VncSharp
             if (_passwordPending)
             {
                 // Server needs a password, so call which ever method is refered to by the GetPassword delegate.
-                string password = GetPassword();
+                if (String.IsNullOrEmpty(password))
+                    password = GetPassword();
 
                 if (password != null)
                 {

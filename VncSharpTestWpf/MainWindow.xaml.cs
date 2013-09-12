@@ -21,8 +21,8 @@ namespace VncSharpTestWpf
                 remoteDesktop.ConnectComplete += RemoteDesktop1OnConnectComplete;
                 remoteDesktop.ConnectionLost += RemoteDesktop1OnConnectionLost;
                 var stream = new FileStream("example2.fbs", FileMode.Open);
-                remoteDesktop.Connect(stream);
-                //remoteDesktop.Connect(vncHost, false, true);
+                //remoteDesktop.Connect(stream);
+                remoteDesktop.Connect(vncHost, 0, false, true, "Tor!Tor!");
             }
             catch (VncProtocolException vex)
             {

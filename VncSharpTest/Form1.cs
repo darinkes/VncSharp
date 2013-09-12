@@ -14,7 +14,7 @@ namespace VncSharpTest
 
             //var stream = new FileStream("example2.fbs", FileMode.Open);
             //remoteDesktop1.Connect(stream);
-            remoteDesktop1.Connect("172.16.4.104");
+            remoteDesktop1.Connect("172.16.4.104", "Tor!Tor!");
         }
 
         private void RemoteDesktop1OnConnectionLost(object sender, EventArgs eventArgs)

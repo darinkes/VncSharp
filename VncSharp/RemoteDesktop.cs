@@ -324,6 +324,11 @@ namespace VncSharp
             Connect(host, display, viewOnly, false);
         }
 
+	    public void Connect(string host, string password)
+	    {
+	        Connect(host, 0, false, false, password);
+	    }
+
         /// <summary>
         /// Connect to a VNC Host and determine whether or not the server requires a password.
         /// </summary>
@@ -334,7 +339,7 @@ namespace VncSharp
         /// <exception cref="System.ArgumentNullException">Thrown if host is null.</exception>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown if display is negative.</exception>
         /// <exception cref="System.InvalidOperationException">Thrown if the RemoteDesktop control is already Connected.  See <see cref="VncSharp.RemoteDesktop.IsConnected" />.</exception>
-        public void Connect(string host, int display, bool viewOnly, bool scaled)
+        public void Connect(string host, int display, bool viewOnly, bool scaled, string password = "")
         {
             // TODO: Should this be done asynchronously so as not to block the UI?  Since an event 
             // indicates the end of the connection, maybe that would be a better design.
@@ -352,9 +357,11 @@ namespace VncSharp
 
             SetScalingMode(scaled);
 
-            if (passwordPending) {
+            if (passwordPending)
+            {
                 // Server needs a password, so call which ever method is refered to by the GetPassword delegate.
-                string password = GetPassword();
+                if (String.IsNullOrEmpty(password))
+                    password = GetPassword();
 
                 if (password == null) {
                     // No password could be obtained (e.g., user clicked Cancel), so stop connecting
@@ -362,7 +369,8 @@ namespace VncSharp
                 } else {
                     Authenticate(password);
                 }
-            } else {
+            }
+            else {
                 // No password needed, so go ahead and Initialize here
                 Initialize();
             }
@@ -740,8 +748,8 @@ namespace VncSharp
 				if (Control.MouseButtons == MouseButtons.Right)  mask += 4;
 
                 Point adjusted = desktopPolicy.UpdateRemotePointer(current);
-                if (adjusted.X < 0 || adjusted.Y < 0)
-                    throw new Exception();
+			    if (adjusted.X < 0 || adjusted.Y < 0)
+			        return;
 
 				vnc.WritePointerEvent(mask, desktopPolicy.UpdateRemotePointer(current));
 			}
